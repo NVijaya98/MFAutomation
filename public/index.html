@@ -7,79 +7,113 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
+    <div class="credential-gate" id="credential-gate">
+      <section class="credential-card">
+        <p class="eyebrow">Session Sign-In</p>
+        <h2>Mainframe Credentials</h2>
+        <p class="credential-copy">
+          Enter the mainframe user ID and password for this browser session. The password is kept only in memory and is not stored in the page.
+        </p>
+
+        <label class="field">
+          <span>Mainframe user ID</span>
+          <input id="mainframe-user-id" type="text" autocomplete="username" placeholder="Enter mainframe user ID" />
+        </label>
+
+        <label class="field">
+          <span>Mainframe password</span>
+          <input id="mainframe-password" type="password" autocomplete="current-password" placeholder="Enter mainframe password" />
+        </label>
+
+        <div class="actions">
+          <button id="begin-session" class="primary wide" type="button">Unlock Launcher</button>
+        </div>
+      </section>
+    </div>
+
     <main class="shell">
-      <section class="hero">
+      <section class="topbar">
         <div>
           <p class="eyebrow">IBM Z Workload Scheduler</p>
-          <h1>Launch batch from chat or an operator console</h1>
-          <p class="lede">
-            Type a command like <code>execute pseudo batch</code> or choose the batch directly from dropdowns.
-          </p>
+          <h1>Batch Operations Console</h1>
         </div>
-        <div class="status-card">
-          <div class="status-label">Connection mode</div>
-          <div class="status-value" id="connection-mode">Loading</div>
+        <div class="topbar-right">
+          <div class="topbar-actions">
+            <label class="toolbar-field" for="theme-select">
+              <span>Theme</span>
+              <select id="theme-select">
+                <option value="regular">Regular</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </label>
+            <button id="logout-session" class="ghost danger" type="button">Logout</button>
+          </div>
+
+          <div class="status-strip">
+            <div class="status-card">
+              <div class="status-label">Mode</div>
+              <div class="status-value" id="connection-mode">Loading</div>
+            </div>
+            <div class="status-card">
+              <div class="status-label">Session</div>
+              <div class="status-value status-small" id="session-identity">Mainframe sign-in required</div>
+            </div>
+            <div class="status-card">
+              <div class="status-label">Catalog</div>
+              <div class="status-value status-small" id="job-count">0 jobs</div>
+            </div>
+          </div>
         </div>
       </section>
 
       <section class="workspace">
-        <section class="panel">
+        <section class="panel launch-panel">
           <div class="panel-head">
-            <h2>Launch Console</h2>
-            <span class="badge" id="job-count">0 jobs</span>
+            <h2>Launch Request</h2>
+            <span class="badge" id="last-status">Idle</span>
           </div>
 
-          <label class="field">
-            <span>Shared secret</span>
-            <input id="shared-secret" type="password" placeholder="x-chat-secret" value="change-me" />
-          </label>
+          <section class="subpanel subpanel-compact">
+            <div class="subpanel-head subpanel-head-inline">
+              <h3>Session Controls</h3>
+              <button id="change-credentials" class="ghost" type="button">Update Sign-In</button>
+            </div>
+          </section>
 
-          <div class="grid">
-            <label class="field">
-              <span>Batch group</span>
-              <select id="job-select"></select>
-            </label>
+          <section class="subpanel">
+            <div class="subpanel-head">
+              <h3>Job Selection</h3>
+            </div>
 
-            <label class="field">
-              <span>Command phrase</span>
-              <select id="command-select"></select>
-            </label>
-          </div>
+            <div class="grid">
+              <label class="field">
+                <span>Batch definition</span>
+                <select id="job-select"></select>
+              </label>
 
-          <div class="actions">
-            <button id="launch-selected" class="primary" type="button">Launch Selected Batch</button>
-            <button id="use-command" class="ghost" type="button">Copy To Chat Input</button>
-          </div>
+              <label class="field">
+                <span>Action</span>
+                <select id="action-select">
+                  <option value="execute">Execute</option>
+                  <option value="listSchedulerJobs">List Jobs In Scheduler</option>
+                </select>
+              </label>
+            </div>
 
-          <label class="field">
-            <span>Chat command</span>
-            <textarea id="chat-command" rows="4" placeholder="execute pseudo batch"></textarea>
-          </label>
-
-          <div class="grid compact">
-            <label class="field">
-              <span>Source</span>
-              <input id="source" type="text" value="operator-ui" />
-            </label>
-
-            <label class="field">
-              <span>User ID</span>
-              <input id="user-id" type="text" value="local-operator" />
-            </label>
-          </div>
-
-          <button id="launch-chat" class="primary wide" type="button">Launch From Chat Command</button>
+            <div class="actions">
+              <button id="launch-selected" class="primary" type="button">Submit Selected Job</button>
+            </div>
+          </section>
         </section>
 
         <section class="panel transcript-panel">
           <div class="panel-head">
-            <h2>Activity</h2>
-            <span class="badge subtle" id="last-status">Idle</span>
+            <h2>Execution Details</h2>
+            <span class="badge subtle">Response</span>
           </div>
 
-          <div class="job-summary" id="job-summary">
-            Select a batch to see the mapped IZWS application, operation, and job name.
-          </div>
+          <div class="summary-grid" id="job-summary"></div>
 
           <pre class="transcript" id="result-view">Waiting for a launch request.</pre>
         </section>

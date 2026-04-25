@@ -1,27 +1,33 @@
 const state = {
-  jobs: []
+  jobs: [],
+  mainframeCredentials: null
 };
 
 const elements = {
+  credentialGate: document.getElementById("credential-gate"),
+  mainframeUserId: document.getElementById("mainframe-user-id"),
+  mainframePassword: document.getElementById("mainframe-password"),
+  beginSession: document.getElementById("begin-session"),
+  changeCredentials: document.getElementById("change-credentials"),
+  logoutSession: document.getElementById("logout-session"),
+  themeSelect: document.getElementById("theme-select"),
+  sessionIdentity: document.getElementById("session-identity"),
   connectionMode: document.getElementById("connection-mode"),
-  sharedSecret: document.getElementById("shared-secret"),
   jobSelect: document.getElementById("job-select"),
-  commandSelect: document.getElementById("command-select"),
-  chatCommand: document.getElementById("chat-command"),
-  source: document.getElementById("source"),
-  userId: document.getElementById("user-id"),
+  actionSelect: document.getElementById("action-select"),
   jobCount: document.getElementById("job-count"),
   jobSummary: document.getElementById("job-summary"),
   resultView: document.getElementById("result-view"),
   lastStatus: document.getElementById("last-status"),
-  launchSelected: document.getElementById("launch-selected"),
-  useCommand: document.getElementById("use-command"),
-  launchChat: document.getElementById("launch-chat")
+  launchSelected: document.getElementById("launch-selected")
 };
 
 async function boot() {
+  document.body.classList.add("modal-open");
+  applyTheme("regular");
   await Promise.all([loadHealth(), loadJobs()]);
   bindEvents();
+  updateSessionState();
 }
 
 async function loadHealth() {
@@ -56,27 +62,13 @@ function renderJobs() {
 
 function updateCommandOptions() {
   const selectedJob = getSelectedJob();
-  elements.commandSelect.innerHTML = "";
 
   if (!selectedJob) {
-    elements.jobSummary.textContent = "No jobs configured yet.";
+    elements.jobSummary.innerHTML = "";
     return;
   }
 
-  selectedJob.commandPhrases.forEach((phrase, index) => {
-    const option = document.createElement("option");
-    option.value = phrase;
-    option.textContent = phrase;
-    if (index === 0) {
-      option.selected = true;
-    }
-    elements.commandSelect.appendChild(option);
-  });
-
-  elements.chatCommand.value = selectedJob.defaultCommand || selectedJob.commandPhrases[0] || "";
-  elements.jobSummary.textContent =
-    `${selectedJob.description} Application: ${selectedJob.schedulerApplication}. ` +
-    `Operation: ${selectedJob.schedulerOperation}. Job: ${selectedJob.jobName}.`;
+  renderJobSummary(selectedJob);
 }
 
 function getSelectedJob() {
@@ -85,40 +77,139 @@ function getSelectedJob() {
 
 function bindEvents() {
   elements.jobSelect.addEventListener("change", updateCommandOptions);
-
-  elements.commandSelect.addEventListener("change", () => {
-    elements.chatCommand.value = elements.commandSelect.value;
+  elements.actionSelect.addEventListener("change", updateCommandOptions);
+  elements.beginSession.addEventListener("click", beginSession);
+  elements.changeCredentials.addEventListener("click", reopenCredentialGate);
+  elements.logoutSession.addEventListener("click", logoutSession);
+  elements.themeSelect.addEventListener("change", () => {
+    applyTheme(elements.themeSelect.value);
   });
-
-  elements.useCommand.addEventListener("click", () => {
-    elements.chatCommand.value = elements.commandSelect.value;
-    elements.lastStatus.textContent = "Command ready";
-  });
+  elements.mainframeUserId.addEventListener("keydown", handleCredentialKeydown);
+  elements.mainframePassword.addEventListener("keydown", handleCredentialKeydown);
+  elements.actionSelect.addEventListener("keydown", handleLaunchKeydown);
+  elements.jobSelect.addEventListener("keydown", handleLaunchKeydown);
 
   elements.launchSelected.addEventListener("click", () => {
-    launchCommand(elements.commandSelect.value);
-  });
-
-  elements.launchChat.addEventListener("click", () => {
-    launchCommand(elements.chatCommand.value);
+    launchSelectedJob();
   });
 }
 
-async function launchCommand(command) {
+function renderJobSummary(job) {
+  const summaryItems = [
+    { label: "Batch", value: job.displayName || job.jobName },
+    { label: "Job Name", value: job.jobName || "-" },
+    { label: "Application", value: job.schedulerApplication || "-" },
+    { label: "Operation", value: job.schedulerOperation || "-" },
+    { label: "Action", value: elements.actionSelect.value === "execute" ? "Execute" : "List Jobs In Scheduler" }
+  ];
+
+  elements.jobSummary.innerHTML = summaryItems
+    .map(
+      (item) => `
+        <div class="summary-item">
+          <div class="summary-label">${item.label}</div>
+          <div class="summary-value">${item.value}</div>
+        </div>
+      `
+    )
+    .join("");
+}
+
+function beginSession() {
+  const userId = elements.mainframeUserId.value.trim();
+  const password = elements.mainframePassword.value;
+
+  if (!userId || !password) {
+    elements.lastStatus.textContent = "Credentials required";
+    elements.resultView.textContent = JSON.stringify(
+      { message: "Enter mainframe user ID and password to unlock the launcher." },
+      null,
+      2
+    );
+    return;
+  }
+
+  state.mainframeCredentials = {
+    userId,
+    password
+  };
+
+  elements.mainframePassword.value = "";
+  elements.credentialGate.classList.add("hidden");
+  document.body.classList.remove("modal-open");
+  updateSessionState();
+  elements.lastStatus.textContent = "Ready";
+}
+
+function handleCredentialKeydown(event) {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    beginSession();
+  }
+}
+
+function handleLaunchKeydown(event) {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    launchSelectedJob();
+  }
+}
+
+function reopenCredentialGate() {
+  elements.credentialGate.classList.remove("hidden");
+  document.body.classList.add("modal-open");
+  elements.mainframePassword.value = "";
+  elements.mainframePassword.focus();
+}
+
+function logoutSession() {
+  state.mainframeCredentials = null;
+  elements.mainframeUserId.value = "";
+  elements.mainframePassword.value = "";
+  elements.lastStatus.textContent = "Logged out";
+  elements.resultView.textContent = "Session cleared. Sign in again to continue.";
+  updateSessionState();
+  reopenCredentialGate();
+}
+
+function applyTheme(theme) {
+  document.body.dataset.theme = theme;
+}
+
+function updateSessionState() {
+  const hasCredentials = Boolean(state.mainframeCredentials);
+  elements.launchSelected.disabled = !hasCredentials;
+  elements.sessionIdentity.textContent = hasCredentials
+    ? `Signed in as ${state.mainframeCredentials.userId}`
+    : "Mainframe sign-in required";
+}
+
+function launchSelectedJob() {
+  launchCommand();
+}
+
+async function launchCommand() {
+  if (!state.mainframeCredentials) {
+    reopenCredentialGate();
+    return;
+  }
+
   elements.lastStatus.textContent = "Launching";
   elements.resultView.textContent = "Submitting request...";
 
   try {
-    const response = await fetch("/chat/command", {
+    const response = await fetch("/ui/launch", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "x-chat-secret": elements.sharedSecret.value
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        command,
-        source: elements.source.value || "operator-ui",
-        userId: elements.userId.value || "local-operator"
+        action: elements.actionSelect.value,
+        jobId: elements.jobSelect.value,
+        mainframeCredentials: {
+          userId: state.mainframeCredentials.userId,
+          password: state.mainframeCredentials.password
+        }
       })
     });
 

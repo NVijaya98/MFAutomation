@@ -19,6 +19,10 @@ function findJobByCommand(commandText) {
   );
 }
 
+function findJobById(jobId) {
+  return Object.values(jobs).find((job) => job.id === jobId);
+}
+
 function normalizeCommand(commandText) {
   return String(commandText || "")
     .trim()
@@ -29,6 +33,7 @@ function normalizeCommand(commandText) {
 module.exports = {
   jobs,
   findJobByCommand,
+  findJobById,
   normalizeCommand,
   listJobs: () => Object.values(jobs)
 };
