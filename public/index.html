@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IZWS Batch Launcher</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">IBM Z Workload Scheduler</p>
+          <h1>Launch batch from chat or an operator console</h1>
+          <p class="lede">
+            Type a command like <code>execute pseudo batch</code> or choose the batch directly from dropdowns.
+          </p>
+        </div>
+        <div class="status-card">
+          <div class="status-label">Connection mode</div>
+          <div class="status-value" id="connection-mode">Loading</div>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Launch Console</h2>
+            <span class="badge" id="job-count">0 jobs</span>
+          </div>
+
+          <label class="field">
+            <span>Shared secret</span>
+            <input id="shared-secret" type="password" placeholder="x-chat-secret" value="change-me" />
+          </label>
+
+          <div class="grid">
+            <label class="field">
+              <span>Batch group</span>
+              <select id="job-select"></select>
+            </label>
+
+            <label class="field">
+              <span>Command phrase</span>
+              <select id="command-select"></select>
+            </label>
+          </div>
+
+          <div class="actions">
+            <button id="launch-selected" class="primary" type="button">Launch Selected Batch</button>
+            <button id="use-command" class="ghost" type="button">Copy To Chat Input</button>
+          </div>
+
+          <label class="field">
+            <span>Chat command</span>
+            <textarea id="chat-command" rows="4" placeholder="execute pseudo batch"></textarea>
+          </label>
+
+          <div class="grid compact">
+            <label class="field">
+              <span>Source</span>
+              <input id="source" type="text" value="operator-ui" />
+            </label>
+
+            <label class="field">
+              <span>User ID</span>
+              <input id="user-id" type="text" value="local-operator" />
+            </label>
+          </div>
+
+          <button id="launch-chat" class="primary wide" type="button">Launch From Chat Command</button>
+        </section>
+
+        <section class="panel transcript-panel">
+          <div class="panel-head">
+            <h2>Activity</h2>
+            <span class="badge subtle" id="last-status">Idle</span>
+          </div>
+
+          <div class="job-summary" id="job-summary">
+            Select a batch to see the mapped IZWS application, operation, and job name.
+          </div>
+
+          <pre class="transcript" id="result-view">Waiting for a launch request.</pre>
+        </section>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

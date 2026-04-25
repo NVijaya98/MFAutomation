@@ -1,0 +1,13 @@
+{
+  "name": "izws-chat-batch-trigger",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Starter service to trigger IBM Z Workload Scheduler batch flows from chat commands.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
